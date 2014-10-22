@@ -4,7 +4,7 @@ case "$1" in
   configure)
     chmod +x /etc/init.d/monasca-thresh
     if ! [ `getent passwd thresh` ]; then
-      adduser --system --group thresh
+      adduser --system --group monasca
     fi
 
     #Restart does not pick up upstart job config changes stop/start is needed

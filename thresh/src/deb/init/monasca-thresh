@@ -13,23 +13,23 @@ case "$1" in
     start)
       $0 status
       if [ $? -ne 0 ]; then
-        sudo -Hu thresh /opt/storm/current/bin/storm jar /opt/monasca/monasca-thresh.jar monasca.thresh.ThresholdingEngine /etc/monasca/thresh-config.yml thresh-cluster
+        sudo -Hu monasca /opt/storm/current/bin/storm jar /opt/monasca/monasca-thresh.jar monasca.thresh.ThresholdingEngine /etc/monasca/thresh-config.yml thresh-cluster
       else
         echo "monasca-thresh is already running"
       fi
       exit 0
     ;;
     stop)
-      sudo -Hu thresh /opt/storm/current/bin/storm kill thresh-cluster
+      sudo -Hu monasca /opt/storm/current/bin/storm kill thresh-cluster
       # The above command returns but actually takes awhile loop watching status
       while true; do
-        sudo -Hu thresh /opt/storm/current/bin/storm list |grep thresh-cluster
+        sudo -Hu monasca /opt/storm/current/bin/storm list |grep thresh-cluster
         if [ $? -ne 0 ]; then break; fi
         sleep 1
       done
     ;;
     status)
-        sudo -Hu thresh /opt/storm/current/bin/storm list |grep thresh-cluster
+        sudo -Hu monasca /opt/storm/current/bin/storm list |grep thresh-cluster
     ;;
     restart)
       $0 stop
