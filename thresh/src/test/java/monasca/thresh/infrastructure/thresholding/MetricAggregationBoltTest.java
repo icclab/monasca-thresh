@@ -311,7 +311,7 @@ public class MetricAggregationBoltTest {
   public void validateMetricDefUpdatedThreshold() {
     final SubAlarmStats stats =
         updateEnsureMeasurementsKept(subExpr2, "avg(hpcs.compute.mem{id=5}, 60) >= 80");
-    assertEquals(stats.getSubAlarm().getExpression().getThreshold(), 80.0);
+    assertEquals(Double.valueOf(stats.getSubAlarm().getExpression().getThreshold()), 80.0);
   }
 
   public void validateMetricDefUpdatedOperator() {
@@ -365,7 +365,7 @@ public class MetricAggregationBoltTest {
 
     final SubAlarmStats oldStats =
         bolt.metricDefToSubAlarmStatsRepos.get(metricDefinitionAndTenantId).get(ALARM_ID_1);
-    assertEquals(oldStats.getSubAlarm().getExpression().getThreshold(), 90.0);
+    assertEquals(Double.valueOf(oldStats.getSubAlarm().getExpression().getThreshold()), 90.0);
     assertTrue(oldStats.getStats().addValue(80.0, System.currentTimeMillis() / 1000));
     assertFalse(Double.isNaN(oldStats.getStats().getWindowValues()[0]));
     assertNotNull(bolt.metricDefToSubAlarmStatsRepos.get(metricDefinitionAndTenantId).get(ALARM_ID_1));

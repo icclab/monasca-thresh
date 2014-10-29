@@ -241,7 +241,7 @@ public class ThresholdingEngineAlarmTest extends TopologyTestCase {
             Map<String, AlarmSubExpression> unchangedSubExpressions = new HashMap<>();
             Map<String, AlarmSubExpression> changedSubExpressions = new HashMap<>();
             final SubExpression changed = alarmDefinition.getSubExpressions().get(0);
-            final int original = (int)changed.getAlarmSubExpression().getThreshold();
+            final int original = Integer.parseInt(changed.getAlarmSubExpression().getThreshold());
             final int newThreshold = 554;
             changed.getAlarmSubExpression().setThreshold(newThreshold);
             alarmDefinition.getAlarmExpression().getSubExpressions().get(0).setThreshold(newThreshold);
