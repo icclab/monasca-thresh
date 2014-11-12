@@ -17,9 +17,11 @@
 
 package monasca.thresh.domain.model;
 
+import monasca.common.model.alarm.AggregateFunction;
 import monasca.common.model.alarm.AlarmState;
 import monasca.common.model.alarm.AlarmSubExpression;
 import monasca.common.util.stats.SlidingWindowStats;
+import monasca.common.util.stats.Statistic;
 import monasca.common.util.time.TimeResolution;
 
 import org.slf4j.Logger;
@@ -37,7 +39,7 @@ public class SubAlarmStats {
 
   private final int slotWidth;
   private SubAlarm subAlarm;
-  private SlidingWindowStats stats;
+  private SlidingWindowStats<?> stats;
   /** The number of times we can observe an empty window before transitioning to UNDETERMINED state. */
   protected int emptyWindowObservationThreshold;
   private int emptyWindowObservations;
@@ -53,11 +55,19 @@ public class SubAlarmStats {
     initialize(subAlarm, timeResolution, viewEndTimestamp);
   }
 
-  private void initialize(SubAlarm subAlarm, TimeResolution timeResolution, long viewEndTimestamp) {
-    this.stats =
-        new SlidingWindowStats(subAlarm.getExpression().getFunction().toStatistic(),
-            timeResolution, slotWidth, subAlarm.getExpression().getPeriods(), FUTURE_SLOTS,
-            viewEndTimestamp);
+  @SuppressWarnings("unchecked")
+	private void initialize(SubAlarm subAlarm, TimeResolution timeResolution, long viewEndTimestamp) {
+  	if (subAlarm.getExpression().getFunction() == AggregateFunction.CONCAT) {
+  		this.stats =
+	        new SlidingWindowStats<String>((Class<? extends Statistic<String>>) subAlarm.getExpression().getFunction().toStatistic(),
+	            timeResolution, slotWidth, subAlarm.getExpression().getPeriods(), FUTURE_SLOTS,
+	            viewEndTimestamp);
+  	} else {
+	    this.stats =
+	        new SlidingWindowStats<Double>((Class<? extends Statistic<Double>>) subAlarm.getExpression().getFunction().toStatistic(),
+	            timeResolution, slotWidth, subAlarm.getExpression().getPeriods(), FUTURE_SLOTS,
+	            viewEndTimestamp);
+  	}
     int period = subAlarm.getExpression().getPeriod();
     int periodMinutes = period < 60 ? 1 : period / 60; // Assumes the period is in seconds so we
                                                        // convert to minutes
@@ -96,7 +106,7 @@ public class SubAlarmStats {
   /**
    * Returns the stats.
    */
-  public SlidingWindowStats getStats() {
+  public SlidingWindowStats<?> getStats() {
     return stats;
   }
 
@@ -119,26 +129,53 @@ public class SubAlarmStats {
    * @throws IllegalStateException if the {@code timestamp} is outside of the {@link #stats} window
    */
   boolean evaluate() {
-    double[] values = stats.getViewValues();
+  	Object[] values = stats.getViewValues();
     boolean thresholdExceeded = false;
     boolean hasEmptyWindows = false;
-    for (double value : values) {
-      if (Double.isNaN(value)) {
-        hasEmptyWindows = true;
-      } else {
-        emptyWindowObservations = 0;
+    for (Object value : values) {
+    	if (value == null) {
+    		hasEmptyWindows = true;
+    		continue;
+    	}
+    	double temp = Double.NaN;
+    	try {
+    		temp = Double.parseDouble(value.toString());
+    		
+    		if (Double.isNaN(temp))
+          hasEmptyWindows = true;
+    		else {
+    			emptyWindowObservations = 0;
 
-        // Check if value is OK
-        if (!subAlarm.getExpression().getOperator()
-            .evaluate(value, subAlarm.getExpression().getThreshold())) {
-          if (!shouldSendStateChange(AlarmState.OK)) {
-            return false;
-          }
-          setSubAlarmState(AlarmState.OK);
-          return true;
-        } else
-          thresholdExceeded = true;
-      }
+          // Check if value is OK
+          if (!subAlarm.getExpression().getOperator()
+              .evaluate(temp, subAlarm.getExpression().getThreshold())) {
+            if (!shouldSendStateChange(AlarmState.OK)) {
+              return false;
+            }
+            setSubAlarmState(AlarmState.OK);
+            return true;
+          } else
+            thresholdExceeded = true;
+    		}
+    			
+    	} catch (Exception e) {
+    		if (value.toString().length() == 0)
+      		hasEmptyWindows = true;
+    		else {
+          emptyWindowObservations = 0;
+
+          // Check if value is OK
+          if (!subAlarm.getExpression().getOperator()
+              .evaluate(value.toString(), subAlarm.getExpression().getThreshold())) {
+            if (!shouldSendStateChange(AlarmState.OK)) {
+              return false;
+            }
+            setSubAlarmState(AlarmState.OK);
+            return true;
+          } else
+            thresholdExceeded = true;
+        }
+    	}
     }
 
     if (thresholdExceeded && !hasEmptyWindows) {

@@ -43,6 +43,20 @@ public class SubAlarmStatsTest {
     subAlarm.setNoState(true);
     subAlarmStats = new SubAlarmStats(subAlarm, expression.getAlarmSubExpression().getPeriod());
   }
+  
+  public void testLogAlarms() {
+  	SubExpression logExpression =
+        new SubExpression(UUID.randomUUID().toString(),
+            AlarmSubExpression.of("concat(hpcs.compute.log, 60) LIKE \"test\""));
+  	
+  	SubAlarm logSubAlarm = new SubAlarm("123", "1", logExpression);
+  	logSubAlarm.setNoState(true);
+  	SubAlarmStats logSubAlarmStats = new SubAlarmStats(logSubAlarm, logExpression.getAlarmSubExpression().getPeriod());
+  	
+  	logSubAlarmStats.getStats().addValue("Just a tesdt bubu", 1);
+  	assertTrue(logSubAlarmStats.evaluateAndSlideWindow(61));
+  	assertEquals(logSubAlarmStats.getSubAlarm().getState(), AlarmState.OK);
+  }
 
   public void shouldBeOkIfAnySlotsInViewAreBelowThreshold() {
     subAlarmStats.getStats().addValue(5, 1);

@@ -80,10 +80,12 @@ public class AlarmDefinitionDAOImpl implements AlarmDefinitionDAO {
     while (index < rows.size()) {
       Map<String, Object> row = rows.get(index);
       String id = (String) row.get("id");
-      AggregateFunction function = AggregateFunction.fromJson((String) row.get("function"));
+      AggregateFunction function = (row.get("function") != null ? AggregateFunction.fromJson((String) row.get("function")) : null);
       String metricName = (String) row.get("metric_name");
       AlarmOperator operator = AlarmOperator.fromJson((String) row.get("operator"));
-      Double threshold = (Double) row.get("threshold");
+      String threshold = (String) row.get("threshold");
+      if (function == AggregateFunction.CONCAT)
+      	threshold = "\"".concat(threshold.concat("\""));
       Integer period = (Integer) row.get("period");
       Integer periods = (Integer) row.get("periods");
       Map<String, String> dimensions = new HashMap<>();

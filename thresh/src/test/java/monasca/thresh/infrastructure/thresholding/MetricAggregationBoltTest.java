@@ -323,8 +323,8 @@ public class MetricAggregationBoltTest {
   private SubAlarmStats updateEnsureMeasurementsKept(SubExpression subExpr,
       String newSubExpression) {
     final SubAlarmStats stats = updateSubAlarmsStats(subExpr, newSubExpression);
-    final double[] values = stats.getStats().getWindowValues();
-    assertFalse(Double.isNaN(values[0])); // Ensure old measurements weren't flushed
+    final Object[] values = stats.getStats().getWindowValues();
+    assertFalse(Double.isNaN(Double.parseDouble(values[0].toString()))); // Ensure old measurements weren't flushed
     return stats;
   }
 
@@ -349,8 +349,8 @@ public class MetricAggregationBoltTest {
   private SubAlarmStats updateEnsureMeasurementsFlushed(SubExpression subExpr,
       String newSubExpression) {
     final SubAlarmStats stats = updateSubAlarmsStats(subExpr, newSubExpression);
-    final double[] values = stats.getStats().getWindowValues();
-    assertTrue(Double.isNaN(values[0])); // Ensure old measurements were flushed
+    final Object[] values = stats.getStats().getWindowValues();
+    assertTrue(Double.isNaN(Double.parseDouble(values[0].toString()))); // Ensure old measurements were flushed
     return stats;
   }
 
@@ -367,7 +367,7 @@ public class MetricAggregationBoltTest {
         bolt.metricDefToSubAlarmStatsRepos.get(metricDefinitionAndTenantId).get(ALARM_ID_1);
     assertEquals(Double.valueOf(oldStats.getSubAlarm().getExpression().getThreshold()), 90.0);
     assertTrue(oldStats.getStats().addValue(80.0, System.currentTimeMillis() / 1000));
-    assertFalse(Double.isNaN(oldStats.getStats().getWindowValues()[0]));
+    assertFalse(Double.isNaN(Double.parseDouble(oldStats.getStats().getWindowValues()[0].toString())));
     assertNotNull(bolt.metricDefToSubAlarmStatsRepos.get(metricDefinitionAndTenantId).get(ALARM_ID_1));
 
     final SubExpression newExpr =
