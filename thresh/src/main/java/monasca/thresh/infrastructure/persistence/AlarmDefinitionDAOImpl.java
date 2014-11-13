@@ -84,8 +84,6 @@ public class AlarmDefinitionDAOImpl implements AlarmDefinitionDAO {
       String metricName = (String) row.get("metric_name");
       AlarmOperator operator = AlarmOperator.fromJson((String) row.get("operator"));
       String threshold = (String) row.get("threshold");
-      if (function == AggregateFunction.CONCAT)
-      	threshold = "\"".concat(threshold.concat("\""));
       Integer period = (Integer) row.get("period");
       Integer periods = (Integer) row.get("periods");
       Map<String, String> dimensions = new HashMap<>();
